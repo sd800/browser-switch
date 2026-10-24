@@ -78,7 +78,7 @@ See [SECURITY.md](SECURITY.md) for the security model and reporting guidance.
 ./Scripts/test.sh
 ```
 
-The test suite covers domain normalization, internationalized hostnames, matching boundaries, protocol and size restrictions, browser fallback, browser ordering, and persistence.
+The test suite covers domain normalization, internationalized hostnames, matching boundaries, protocol and size restrictions, browser fallback, browser ordering, persistence, and browser picker placement. Window placement checks require a graphical macOS session.
 
 After building, inspect browser discovery without opening a website:
 

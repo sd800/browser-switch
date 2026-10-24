@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let chooser = ChooserState()
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
-    private var chooserWindow: NSWindow?
+    private var chooserWindow: BrowserPickerWindow?
     private var aboutWindow: NSWindow?
     private var receivedURLs = false
     private var finishedLaunching = false
@@ -104,23 +104,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if chooserWindow == nil {
             let view = ChooserView(model: model, state: chooser, choose: { [weak self] in self?.choose($0) },
                                    cancel: { [weak self] in self?.advanceQueue() },
-                                   openSettings: { [weak self] in self?.showSettings() })
-            let window = NSWindow(contentViewController: NSHostingController(rootView: view))
-            window.title = "Open Link — Browser Switch"
-            window.styleMask = [.titled, .closable, .fullSizeContentView]
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.isReleasedWhenClosed = false
-            window.isRestorable = false
+                                   openSettings: { [weak self] in self?.showSettings() },
+                                   contentDidChange: { [weak self] in self?.chooserWindow?.refreshContentSize() })
+            let window = BrowserPickerWindow(rootView: view)
             window.delegate = self
-            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             chooserWindow = window
         }
-        if let window = chooserWindow, !window.isVisible {
-            window.contentView?.layoutSubtreeIfNeeded()
-            // AppKit centers horizontally and places windows slightly above center.
-            window.center()
-        }
+        chooserWindow?.prepareForPresentation()
         chooserWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -177,8 +167,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
             .applicationName: "Browser Switch",
-            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1024.4",
-            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "4"
+            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1024.5",
+            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "5"
         ])
         aboutWindow = NSApp.keyWindow
         if aboutWindow !== settingsWindow, aboutWindow !== chooserWindow {

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 #if SWIFT_PACKAGE
 import BrowserSwitchCore
@@ -11,11 +12,13 @@ final class ChooserState: ObservableObject {
 }
 
 struct ChooserView: View {
+    static let width: CGFloat = 436
     @ObservedObject var model: AppModel
     @ObservedObject var state: ChooserState
     let choose: (InstalledBrowser) -> Void
     let cancel: () -> Void
     let openSettings: () -> Void
+    var contentDidChange: () -> Void = {}
     var choices: [InstalledBrowser] {
         model.visibleBrowsers.isEmpty ? model.defaultBrowser.map { [$0] } ?? [] : model.visibleBrowsers
     }
@@ -92,8 +95,51 @@ struct ChooserView: View {
                 Button("Cancel", action: cancel).keyboardShortcut(.cancelAction).disabled(state.isOpening)
             }
         }
-        .padding(26).frame(width: 436)
+        .padding(26).frame(width: Self.width)
         .font(.system(size: 15)).tint(AppStyle.accent)
+        .onChange(of: choices.map(\.id)) { _, _ in contentDidChange() }
+        .onChange(of: state.urls.first) { _, _ in contentDidChange() }
+        .onChange(of: state.failure) { _, _ in contentDidChange() }
+    }
+}
+
+@MainActor
+final class BrowserPickerWindow: NSWindow {
+    private let hosting: NSHostingController<ChooserView>
+
+    init(rootView: ChooserView) {
+        hosting = NSHostingController(rootView: rootView)
+        // Resolve content size explicitly before positioning, rather than letting
+        // SwiftUI resize an already-centered window on a later layout pass.
+        hosting.sizingOptions = []
+        super.init(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        contentViewController = hosting
+        title = "Open Link — Browser Switch"
+        titlebarAppearsTransparent = true
+        titleVisibility = .hidden
+        isReleasedWhenClosed = false
+        isRestorable = false
+        collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+    }
+
+    func prepareForPresentation() {
+        let wasVisible = isVisible
+        resizeToFitContent()
+        if !wasVisible { center() }
+    }
+
+    func refreshContentSize() {
+        if isVisible { resizeToFitContent() }
+    }
+
+    private func resizeToFitContent() {
+        let topLeft = NSPoint(x: frame.minX, y: frame.maxY)
+        hosting.view.needsLayout = true
+        hosting.view.layoutSubtreeIfNeeded()
+        let size = hosting.sizeThatFits(in: NSSize(width: ChooserView.width, height: CGFloat.greatestFiniteMagnitude))
+        setContentSize(size)
+        setFrameTopLeftPoint(topLeft)
+        contentView?.layoutSubtreeIfNeeded()
     }
 }
 

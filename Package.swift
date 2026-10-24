@@ -8,6 +8,7 @@ let package = Package(
     targets: [
         .target(name: "BrowserSwitchCore"),
         .executableTarget(name: "BrowserSwitch", dependencies: ["BrowserSwitchCore"]),
-        .testTarget(name: "BrowserSwitchCoreTests", dependencies: ["BrowserSwitchCore"])
+        .testTarget(name: "BrowserSwitchCoreTests", dependencies: ["BrowserSwitchCore"]),
+        .testTarget(name: "BrowserSwitchWindowTests", dependencies: ["BrowserSwitch", "BrowserSwitchCore"])
     ]
 )

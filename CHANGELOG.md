@@ -1,5 +1,12 @@
 # Changelog
 
+## 26.1024.5 — 2026-10-24
+
+### Fixed
+
+- Correct browser picker placement when first opening and reopening the window.
+- Keep queued links in a stable position when longer addresses change the window height.
+
 ## 26.1024.4 — 2026-10-24
 
 ### Changed
