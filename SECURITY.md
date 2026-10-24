@@ -33,5 +33,3 @@ Local ad hoc signatures protect bundle integrity after signing but do not establ
 ## Reporting a vulnerability
 
 Use this repository's GitHub private vulnerability reporting feature if it is available. Do not post exploitable details, private browsing URLs, credentials, or personal domain lists in a public issue. For ordinary bugs, include the macOS version, Browser Switch version, and reproduction steps with placeholder URLs.
-
-© 2026 Songming.org

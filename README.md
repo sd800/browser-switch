@@ -87,5 +87,3 @@ After building, inspect browser discovery without opening a website:
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
-
-© 2026 Songming.org
