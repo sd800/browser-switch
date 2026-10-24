@@ -171,6 +171,7 @@ private struct DomainsView: View {
                         .textFieldStyle(.roundedBorder)
                         .accessibilityLabel("Domain")
                         .focused($domainFocused)
+                        .background(DomainInputFocus { domainFocused = false })
                         .onSubmit(addDomain)
                         .onChange(of: domain) { _, _ in error = nil }
                     Button(action: addDomain) { Label("Add Domain", systemImage: "plus") }
@@ -225,7 +226,6 @@ private struct DomainsView: View {
             }
         }
         .padding(28)
-        .onAppear { domainFocused = true }
         .sheet(isPresented: $showingAdd) { AddDomainView(model: model) }
         .background {
             Button("Add Domain with Options") { showingAdd = true }
@@ -239,7 +239,7 @@ private struct DomainsView: View {
         error = model.addDomain(domain)
         if error == nil {
             domain = ""
-            domainFocused = true
+            domainFocused = false
         }
     }
 }
@@ -261,6 +261,7 @@ private struct AddDomainView: View {
             VStack(alignment: .leading, spacing: 8) {
                 TextField("example.com", text: $domain).textFieldStyle(.roundedBorder)
                     .focused($focused).accessibilityLabel("Domain")
+                    .background(DomainInputFocus { focused = false })
                     .onChange(of: domain) { _, _ in error = nil }
                 Text(error ?? "Paste a full web address or enter a domain.")
                     .font(.system(size: 13)).foregroundStyle(error == nil ? Color.secondary : Color.red)
@@ -278,7 +279,50 @@ private struct AddDomainView: View {
             }
         }
         .font(.system(size: 15)).tint(AppStyle.accent).padding(26).frame(width: 430)
-        .onAppear { focused = true }
+    }
+}
+
+private struct DomainInputFocus: NSViewRepresentable {
+    let clearFocus: () -> Void
+
+    func makeNSView(context: Context) -> FocusView { FocusView(clearFocus: clearFocus) }
+    func updateNSView(_ view: FocusView, context: Context) { view.clearFocus = clearFocus }
+    static func dismantleNSView(_ view: FocusView, coordinator: ()) { view.stopMonitoring() }
+
+    final class FocusView: NSView {
+        var clearFocus: () -> Void
+        private var monitor: Any?
+
+        init(clearFocus: @escaping () -> Void) {
+            self.clearFocus = clearFocus
+            super.init(frame: .zero)
+        }
+
+        required init?(coder: NSCoder) { nil }
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            stopMonitoring()
+            guard let window else { return }
+            DispatchQueue.main.async { [weak self, weak window] in
+                guard let self, let window, self.window === window else { return }
+                self.clearFocus()
+                window.makeFirstResponder(nil)
+            }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                guard let self, let window = self.window, event.window === window,
+                      !self.bounds.contains(self.convert(event.locationInWindow, from: nil)) else { return event }
+                self.clearFocus()
+                window.makeFirstResponder(nil)
+                return event
+            }
+        }
+
+        func stopMonitoring() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+        }
     }
 }
 

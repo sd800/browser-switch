@@ -1,5 +1,12 @@
 # Changelog
 
+## 26.1024.3 — 2026-10-24
+
+### Fixed
+
+- Leave domain inputs unfocused when opening the Domains page or add-domain window.
+- Clear domain input focus when clicking outside the field or completing an inline addition.
+
 ## 26.1024.2 — 2026-10-24
 
 ### Changed
