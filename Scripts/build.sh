@@ -20,13 +20,18 @@ xcodebuild -project "$ROOT/BrowserSwitch.xcodeproj" \
     build
 
 mkdir -p "$ROOT/dist"
-APP="$ROOT/dist/Browser Switch.app"
-rm -rf "$APP"
-ditto "$BUILD_DIR/Build/Products/Release/Browser Switch.app" "$APP"
-# File-provider metadata on a generated bundle can invalidate code signing.
+STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/browser-switch-package.XXXXXX")"
+trap 'rm -rf "$STAGING_DIR"' EXIT
+APP="$STAGING_DIR/Browser Switch.app"
+# Sign outside file-provider folders, where Finder metadata can reappear during signing.
+ditto --noextattr --norsrc "$BUILD_DIR/Build/Products/Release/Browser Switch.app" "$APP"
 xattr -cr "$APP"
 codesign --force --sign "${SIGNING_IDENTITY:--}" --options runtime \
     --entitlements "$ROOT/Resources/BrowserSwitch.entitlements" "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
+OUTPUT_APP="$ROOT/dist/Browser Switch.app"
+rm -rf "$OUTPUT_APP"
+ditto --noextattr --norsrc "$APP" "$OUTPUT_APP"
+codesign --verify --deep --strict --verbose=2 "$OUTPUT_APP"
 ditto -c -k --keepParent "$APP" "$ROOT/dist/Browser-Switch-$(cat "$ROOT/VERSION").zip"
-printf '\nBuilt: %s\n' "$APP"
+printf '\nBuilt: %s\n' "$OUTPUT_APP"

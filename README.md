@@ -6,7 +6,7 @@ Browser Switch is a small native macOS utility that acts as your default web bro
 
 ## Features
 
-- **Choose by domain.** Add domains to an initially empty list. Include subdomains by default, or match an exact hostname.
+- **Choose by domain.** Enter domains directly into an initially empty list, including subdomains by default. Use Command-N to add an exact-hostname rule instead.
 - **Keep everyday browsing simple.** Choose a default browser for other links. If it is unavailable, Browser Switch tries Google Chrome, then Safari, then another installed browser.
 - **Use your installed browsers.** Discover HTTP and HTTPS handlers through macOS Launch Services, excluding Browser Switch itself. Hide browsers from the picker and change their order. The initial order is Google Chrome, Firefox, Safari, Microsoft Edge, then other browsers alphabetically.
 - **Make a fresh choice.** Browser selections apply to the current link. Domain choices are never remembered automatically.
@@ -38,10 +38,10 @@ For development, open `BrowserSwitch.xcodeproj`, choose a signing team if needed
 
 1. Open **Browser Switch → Settings…** and click **Set as Default**, then accept the macOS confirmation. It can also be selected in **System Settings → Desktop & Dock → Default web browser**.
 2. In **General**, select the default browser for everyday links. Google Chrome is preferred on a fresh installation, with Safari as the next choice.
-3. In **Domains**, add a hostname such as `example.com` or paste a full web address. Only the hostname is stored. Subdomains are included unless the switch is turned off.
+3. In **Domains**, enter a hostname such as `example.com` or paste a full web address into the field at the top. Press Return or click **Add Domain** to add it immediately, including subdomains. To add an exact-hostname rule, press **Command-N** and turn off **Include subdomains** in the add-domain window. Only the hostname is stored.
 4. In **Browsers**, hide unwanted picker options and use the arrow buttons to change their order.
 
-For example, adding `example.com` with subdomains enabled asks where to open both `example.com` and `docs.example.com`. It does not match `anotherexample.com` or `example.com.other.org`.
+For example, adding `example.com` with subdomains enabled asks where to open both `example.com` and `docs.example.com`. It does not match `anotherexample.com` or `example.com.other.org`. Each rule shows whether it includes subdomains or matches the exact domain only.
 
 The picker shows the destination hostname and URL. Select a browser to open that link, or cancel to discard it. Multiple matching links wait in a bounded queue and are presented one at a time. If every browser is hidden, the picker offers the default browser so links remain usable.
 
@@ -57,10 +57,10 @@ Browser discovery uses the same macOS application registry that supplies system 
 | `⌘Q` | Quit Browser Switch |
 | `⌘W` | Close the current window |
 | `⌘H` | Hide Browser Switch |
-| `⌘N` | Add a domain while the Domains page is open |
+| `⌘N` | Open the add-domain window with subdomain options while the Domains page is open |
 | `1`–`8` | Choose one of the first eight browsers in the picker |
 | `qwertyuiopasdfghjklzxcvbnm` | Choose subsequent browsers in keyboard order |
-| `Esc` | Cancel the current picker link or close the add-domain sheet |
+| `Esc` | Cancel the current picker link or close the add-domain window |
 
 The `9` key is reserved and does not select a browser. Browsers after the first 34 remain available by clicking.
 

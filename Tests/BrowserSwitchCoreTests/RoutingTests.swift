@@ -28,14 +28,17 @@ final class RoutingTests: XCTestCase {
         }
     }
 
-    func testExactDomainAndURLHostRatherThanPath() {
-        let rules = [DomainRule(domain: "example.com", includesSubdomains: false)]
+    func testRoutingUsesHostAndIncludesSubdomainsByDefault() {
+        let rules = [DomainRule(domain: "example.com")]
         XCTAssertTrue(Routing.shouldAsk(for: URL(string: "https://example.com/a")!, rules: rules))
-        XCTAssertFalse(Routing.shouldAsk(for: URL(string: "https://docs.example.com")!, rules: rules))
+        XCTAssertTrue(Routing.shouldAsk(for: URL(string: "https://docs.example.com")!, rules: rules))
         XCTAssertFalse(Routing.shouldAsk(for: URL(string: "https://evil.com/example.com")!, rules: rules))
         XCTAssertFalse(Routing.shouldAsk(for: URL(string: "https://example.com@evil.com")!, rules: rules))
         XCTAssertFalse(Routing.shouldAsk(for: URL(string: "ftp://example.com")!, rules: rules))
         XCTAssertFalse(Routing.shouldAsk(for: URL(string: "https://example.com")!, rules: []))
+        let exactRules = [DomainRule(domain: "example.com", includesSubdomains: false)]
+        XCTAssertTrue(Routing.shouldAsk(for: URL(string: "https://example.com/a")!, rules: exactRules))
+        XCTAssertFalse(Routing.shouldAsk(for: URL(string: "https://docs.example.com")!, rules: exactRules))
     }
 
     func testBrowserFallbackIsDeterministicAndNeverMissing() {
@@ -61,10 +64,25 @@ final class RoutingTests: XCTestCase {
         XCTAssertTrue(settings.showsMenuBarIcon)
         XCTAssertFalse(settings.keepsDockIcon)
         XCTAssertEqual(settings.defaultBrowserID, "com.google.Chrome")
-        settings.rules = [DomainRule(domain: "example.com", includesSubdomains: false)]
+        settings.rules = [DomainRule(domain: "example.com")]
         settings.browsers = [BrowserPreference(bundleID: "firefox", isVisible: false)]
         XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings)), settings)
         XCTAssertThrowsError(try JSONDecoder().decode(AppSettings.self, from: Data("broken".utf8)))
+    }
+
+    func testExistingExactDomainRulesAndBrowserPreferencesArePreserved() throws {
+        let legacy = Data(#"{"schemaVersion":1,"rules":[{"id":"D7B39451-63B4-4D6C-9E37-A69C4B93F866","domain":"example.com","includesSubdomains":false}],"browsers":[{"bundleID":"org.mozilla.firefox","isVisible":false}],"defaultBrowserID":"com.apple.Safari","showsMenuBarIcon":false,"keepsDockIcon":true}"#.utf8)
+        let saved = try JSONDecoder().decode(AppSettings.self, from: legacy)
+        let rule = try XCTUnwrap(saved.rules.first)
+        XCTAssertEqual(rule.id.uuidString, "D7B39451-63B4-4D6C-9E37-A69C4B93F866")
+        XCTAssertFalse(rule.matches(host: "docs.example.com"))
+        XCTAssertTrue(rule.matches(host: "example.com"))
+        XCTAssertFalse(rule.matches(host: "example.com.evil.org"))
+        XCTAssertEqual(saved.defaultBrowserID, "com.apple.Safari")
+        XCTAssertEqual(saved.browsers, [BrowserPreference(bundleID: "org.mozilla.firefox", isVisible: false)])
+        XCTAssertFalse(saved.showsMenuBarIcon)
+        XCTAssertTrue(saved.keepsDockIcon)
+        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(saved)), saved)
     }
 
     func testInitialBrowserOrderAndUserOverride() {

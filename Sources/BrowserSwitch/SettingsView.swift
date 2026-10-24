@@ -150,32 +150,48 @@ private struct GeneralView: View {
 
 private struct DomainsView: View {
     @ObservedObject var model: AppModel
-    @State private var showingAdd = false
+    @State private var domain = ""
+    @State private var error: String?
     @State private var search = ""
+    @State private var showingAdd = false
+    @FocusState private var domainFocused: Bool
+    // Retain search for future use without exposing or applying it to domain entry.
+    private let searchEnabled = false
     var filteredRules: [DomainRule] {
-        model.settings.rules.filter { search.isEmpty || $0.domain.localizedCaseInsensitiveContains(search) }
+        model.settings.rules.filter { !searchEnabled || search.isEmpty || $0.domain.localizedCaseInsensitiveContains(search) }
             .sorted { $0.domain < $1.domain }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             PageHeader(title: "Some links deserve a choice.", subtitle: "Choose a browser each time you open one of these domains.")
-            HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    TextField("example.com", text: $domain)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Domain")
+                        .focused($domainFocused)
+                        .onSubmit(addDomain)
+                        .onChange(of: domain) { _, _ in error = nil }
+                    Button(action: addDomain) { Label("Add Domain", systemImage: "plus") }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(domain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                Text(error ?? "Includes subdomains. Use ⌘N for more options.")
+                    .font(.system(size: 13)).foregroundStyle(error == nil ? Color.secondary : Color.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if searchEnabled {
                 TextField("Search domains", text: $search)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("Search domains")
-                Button { showingAdd = true } label: { Label("Add Domain", systemImage: "plus") }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut("n", modifiers: .command)
+                    .textFieldStyle(.roundedBorder).accessibilityLabel("Search domains")
             }
             if model.settings.rules.isEmpty {
                 Spacer()
                 VStack(spacing: 13) {
                     Image(systemName: "globe").font(.system(size: 42, weight: .light)).foregroundStyle(AppStyle.accent)
                     Text("Your choice starts here").font(.system(size: 19, weight: .semibold))
-                    Text("Add a domain like example.com. All other links\nwill keep using your default browser.")
+                    Text("Add a domain above. All other links\nwill keep using your default browser.")
                         .foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    Button("Add Your First Domain") { showingAdd = true }.padding(.top, 3)
                 }
                 .frame(maxWidth: .infinity)
                 Spacer()
@@ -190,16 +206,6 @@ private struct DomainsView: View {
                                     .font(.system(size: 13)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Toggle("Include subdomains", isOn: Binding(
-                                get: { rule.includesSubdomains },
-                                set: { value in
-                                    if let index = model.settings.rules.firstIndex(where: { $0.id == rule.id }) {
-                                        model.settings.rules[index].includesSubdomains = value
-                                    }
-                                }
-                            ))
-                            .toggleStyle(.switch).labelsHidden()
-                            .help("Include subdomains of \(rule.domain)")
                             Button(role: .destructive) { model.settings.rules.removeAll { $0.id == rule.id } } label: {
                                 Image(systemName: "minus.circle")
                             }
@@ -212,14 +218,29 @@ private struct DomainsView: View {
                 }
                 .listStyle(.inset)
                 .overlay {
-                    if filteredRules.isEmpty { Text("No matching domains").foregroundStyle(.secondary) }
+                    if searchEnabled && filteredRules.isEmpty { Text("No matching domains").foregroundStyle(.secondary) }
                 }
                 Text("Subdomains match on domain boundaries: example.com includes docs.example.com, but never anotherexample.com.")
                     .font(.system(size: 13)).foregroundStyle(.secondary)
             }
         }
         .padding(28)
+        .onAppear { domainFocused = true }
         .sheet(isPresented: $showingAdd) { AddDomainView(model: model) }
+        .background {
+            Button("Add Domain with Options") { showingAdd = true }
+                .keyboardShortcut("n", modifiers: .command)
+                .hidden().accessibilityHidden(true)
+        }
+    }
+
+    private func addDomain() {
+        guard !domain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        error = model.addDomain(domain)
+        if error == nil {
+            domain = ""
+            domainFocused = true
+        }
     }
 }
 
@@ -256,7 +277,7 @@ private struct AddDomainView: View {
                 .disabled(domain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        .font(.system(size: 15)).padding(26).frame(width: 430)
+        .font(.system(size: 15)).tint(AppStyle.accent).padding(26).frame(width: 430)
         .onAppear { focused = true }
     }
 }

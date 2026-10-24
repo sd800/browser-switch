@@ -1,5 +1,18 @@
 # Changelog
 
+## 26.1024.2 — 2026-10-24
+
+### Changed
+
+- Add domains directly from the Domains page with Return or Add Domain, without a separate sheet.
+- Include subdomains when adding a domain inline; show each rule's matching scope without a per-row switch.
+- Disable domain search while retaining its code for future use.
+- Keep the Command-N add-domain window for choosing whether a new rule includes subdomains.
+
+### Fixed
+
+- Sign packaged apps in a temporary folder to avoid file-provider metadata breaking local builds.
+
 ## 26.1024.1 — 2026-10-24
 
 ### Added

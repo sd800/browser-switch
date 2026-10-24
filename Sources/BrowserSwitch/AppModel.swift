@@ -128,7 +128,7 @@ final class AppModel: ObservableObject {
     }
 
     @discardableResult
-    func addDomain(_ input: String, includesSubdomains: Bool) -> String? {
+    func addDomain(_ input: String, includesSubdomains: Bool = true) -> String? {
         guard let domain = DomainName.parse(input) else { return "Enter a valid domain, such as example.com, or paste a web address." }
         guard !settings.rules.contains(where: { $0.domain == domain }) else { return "This domain is already in your list." }
         settings.rules.append(DomainRule(domain: domain, includesSubdomains: includesSubdomains))
