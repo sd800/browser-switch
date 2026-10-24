@@ -4,7 +4,8 @@
 
 ### Changed
 
-- Position the browser picker using native macOS centering after layout, without recentering between queued links.
+- Open the browser picker slightly above screen center and keep its position stable between queued links.
+- Organize project documentation.
 
 ### Fixed
 
@@ -23,12 +24,12 @@
 
 - Add domains directly from the Domains page with Return or Add Domain, without a separate sheet.
 - Include subdomains when adding a domain inline; show each rule's matching scope without a per-row switch.
-- Disable domain search while retaining its code for future use.
+- Simplify domain entry by hiding search.
 - Keep the Command-N add-domain window for choosing whether a new rule includes subdomains.
 
 ### Fixed
 
-- Sign packaged apps in a temporary folder to avoid file-provider metadata breaking local builds.
+- Improve local app packaging reliability.
 
 ## 26.1024.1 — 2026-10-24
 
@@ -40,6 +41,6 @@
 - System-discovered browser options with visibility controls and custom ordering.
 - Browser picker with per-link choices, number keys followed by letter keys in keyboard order, and a bounded queue.
 - Independent menu bar and Dock preferences, optional launch at login, and Spotlight reopening.
-- English interface with native system controls, 15 pt body text, the system accent color, and automatic light and dark appearance.
+- English interface with native system controls, the system accent color, and automatic light and dark appearance.
 - App Sandbox, Hardened Runtime, URL validation, and local-only preferences without browsing history or analytics.
 - Universal build script, Xcode project, and routing and security tests.

@@ -11,7 +11,7 @@ Browser Switch is a small native macOS utility that acts as your default web bro
 - **Use your installed browsers.** Discover HTTP and HTTPS handlers through macOS Launch Services, excluding Browser Switch itself. Hide browsers from the picker and change their order. The initial order is Google Chrome, Firefox, Safari, Microsoft Edge, then other browsers alphabetically.
 - **Make a fresh choice.** Browser selections apply to the current link. Domain choices are never remembered automatically.
 - **Stay out of the way.** Independently enable the menu bar icon and persistent Dock icon. With both off, reopen the app from Spotlight, Launchpad, or Applications.
-- **Feel at home on macOS.** Native controls, SF Symbols, the system accent color, system fonts with a 15 pt body size, automatic light and dark appearance, and standard keyboard shortcuts. The interface is in English (United States).
+- **Feel at home on macOS.** Native controls, the system accent color, system fonts, automatic light and dark appearance, and standard keyboard shortcuts. The interface is in English (United States).
 - **Keep links private.** No analytics, browsing history, embedded browser, or outbound network permission. Settings stay on the Mac.
 
 ## Requirements
@@ -62,7 +62,7 @@ Browser discovery uses the same macOS application registry that supplies system 
 | `qwertyuiopasdfghjklzxcvbnm` | Choose subsequent browsers in keyboard order |
 | `Esc` | Cancel the current picker link or close the add-domain window |
 
-The `9` key is reserved and does not select a browser. Browsers after the first 34 remain available by clicking.
+Browsers without an assigned shortcut remain available by clicking.
 
 Closing settings keeps routing available. Quitting stops the running process; macOS launches it again when a link is sent to Browser Switch as the default browser. **Open at login** is optional.
 
@@ -78,11 +78,7 @@ See [SECURITY.md](SECURITY.md) for the security model and reporting guidance.
 ./Scripts/test.sh
 ```
 
-The test suite covers domain normalization, internationalized hostnames, matching boundaries, protocol and size restrictions, browser fallback, browser ordering, and persistence. For source folders managed by a file provider, place test products outside the synced folder:
-
-```sh
-BROWSER_SWITCH_TEST_BUILD_DIR=/tmp/browser-switch-tests ./Scripts/test.sh
-```
+The test suite covers domain normalization, internationalized hostnames, matching boundaries, protocol and size restrictions, browser fallback, browser ordering, and persistence.
 
 After building, inspect browser discovery without opening a website:
 
@@ -90,8 +86,6 @@ After building, inspect browser discovery without opening a website:
 "dist/Browser Switch.app/Contents/MacOS/Browser Switch" --diagnostics
 ```
 
-## Versioning
-
-Releases use `YY.MDD.NUM`: a two-digit year, the unpadded month followed by the two-digit day, and the release sequence within that month. For example, `26.1024.1` is the first release in October 2026, dated October 24. The sequence resets at the start of each month. The separate build number in `BUILD_NUMBER` increases across all releases and never resets; About displays it as `Version 26.1024.1 (1)`. Keep `VERSION`, `BUILD_NUMBER`, and the Xcode project version settings in sync when preparing a release. See [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 © 2026 Songming.org
