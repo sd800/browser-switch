@@ -116,7 +116,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             chooserWindow = window
         }
-        chooserWindow?.center()
+        if let window = chooserWindow, !window.isVisible {
+            window.contentView?.layoutSubtreeIfNeeded()
+            // AppKit centers horizontally and places windows slightly above center.
+            window.center()
+        }
         chooserWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -173,8 +177,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
             .applicationName: "Browser Switch",
-            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1024.3",
-            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "3"
+            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1024.4",
+            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "4"
         ])
         aboutWindow = NSApp.keyWindow
         if aboutWindow !== settingsWindow, aboutWindow !== chooserWindow {

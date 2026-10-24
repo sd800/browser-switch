@@ -1,5 +1,15 @@
 # Changelog
 
+## 26.1024.4 — 2026-10-24
+
+### Changed
+
+- Position the browser picker using native macOS centering after layout, without recentering between queued links.
+
+### Fixed
+
+- Keep newly added domains fully visible when alphabetical sorting inserts them above existing entries.
+
 ## 26.1024.3 — 2026-10-24
 
 ### Fixed

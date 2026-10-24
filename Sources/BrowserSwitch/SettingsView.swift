@@ -197,27 +197,41 @@ private struct DomainsView: View {
                 .frame(maxWidth: .infinity)
                 Spacer()
             } else {
-                List {
-                    ForEach(filteredRules) { rule in
-                        HStack(spacing: 12) {
-                            Image(systemName: "globe").foregroundStyle(AppStyle.accent).frame(width: 22)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(rule.domain).fontWeight(.medium).textSelection(.enabled)
-                                Text(rule.includesSubdomains ? "Includes subdomains" : "Exact domain only")
-                                    .font(.system(size: 13)).foregroundStyle(.secondary)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredRules) { rule in
+                                VStack(spacing: 0) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "globe").foregroundStyle(AppStyle.accent).frame(width: 22)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(rule.domain).fontWeight(.medium).textSelection(.enabled)
+                                            Text(rule.includesSubdomains ? "Includes subdomains" : "Exact domain only")
+                                                .font(.system(size: 13)).foregroundStyle(.secondary)
+                                        }
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        Spacer()
+                                        Button(role: .destructive) { model.settings.rules.removeAll { $0.id == rule.id } } label: {
+                                            Image(systemName: "minus.circle")
+                                        }
+                                        .buttonStyle(.borderless).foregroundStyle(.secondary)
+                                        .help("Remove \(rule.domain)").accessibilityLabel("Remove \(rule.domain)")
+                                    }
+                                    .accessibilityElement(children: .contain)
+                                    .padding(.vertical, 12)
+                                    if rule.id != filteredRules.last?.id { Divider().padding(.leading, 34) }
+                                }
+                                .id(rule.id)
                             }
-                            Spacer()
-                            Button(role: .destructive) { model.settings.rules.removeAll { $0.id == rule.id } } label: {
-                                Image(systemName: "minus.circle")
-                            }
-                            .buttonStyle(.borderless).foregroundStyle(.secondary)
-                            .help("Remove \(rule.domain)").accessibilityLabel("Remove \(rule.domain)")
                         }
-                        .accessibilityElement(children: .contain)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                     }
+                    .onChange(of: model.settings.rules.map(\.id)) { previous, current in
+                        guard let added = current.first(where: { !previous.contains($0) }) else { return }
+                        DispatchQueue.main.async { proxy.scrollTo(added, anchor: .top) }
+                    }
                 }
-                .listStyle(.inset)
                 .overlay {
                     if searchEnabled && filteredRules.isEmpty { Text("No matching domains").foregroundStyle(.secondary) }
                 }
