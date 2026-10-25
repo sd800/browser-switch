@@ -11,6 +11,7 @@
 
 - Simplify website download navigation, first-launch installation instructions, and the footer.
 - Use a neutral example domain in the website preview.
+- Clarify privacy documentation.
 
 ### Fixed
 
