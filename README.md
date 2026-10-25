@@ -18,7 +18,17 @@ Browser Switch is a small native macOS utility that acts as your default web bro
 
 macOS 14 Sonoma or later. Universal builds support Apple silicon and Intel Macs.
 
-## Build and install
+## Download and install
+
+Download the universal macOS app from [GitHub Releases](https://github.com/sd800/browser-switch/releases/latest).
+
+1. Unzip the download and move **Browser Switch.app** to Applications.
+2. Open the app. If macOS blocks it, open **System Settings → Privacy & Security**, scroll to **Security**, and click **Open Anyway** beside Browser Switch. Confirm **Open** when prompted. The button appears after you have tried opening the app.
+3. Follow the routing setup below. Keep only one installed copy so macOS does not register multiple builds of the same app.
+
+The current download is ad hoc signed with App Sandbox and Hardened Runtime. It is not Developer ID signed or notarized by Apple. Each release includes a SHA-256 checksum file.
+
+## Build from source
 
 Install Xcode 15.3 or later, then run:
 
@@ -87,3 +97,7 @@ After building, inspect browser discovery without opening a website:
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Website
+
+The product website lives in [`web/`](web/) and is published at [browser-switch.songming.org](https://browser-switch.songming.org). Double-click `web/index.html` to open it locally, including its interactive routing preview. See the [website README](web/README.md) for deployment details.

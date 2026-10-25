@@ -2,10 +2,16 @@
 
 ## 26.1024.5 — 2026-10-24
 
+### Added
+
+- Product website with an interactive routing preview, automatic light and dark appearance, installation instructions, and GitHub Pages deployment.
+- Universal macOS download and SHA-256 checksum on GitHub Releases.
+
 ### Fixed
 
 - Correct browser picker placement when first opening and reopening the window.
 - Keep queued links in a stable position when longer addresses change the window height.
+- Exclude filesystem metadata from distribution archives so extracted app signatures remain valid.
 
 ## 26.1024.4 — 2026-10-24
 
