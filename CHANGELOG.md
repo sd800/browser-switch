@@ -9,7 +9,7 @@
 
 ### Changed
 
-- Refine website download navigation and installation copy.
+- Simplify website download navigation and first-launch installation instructions.
 
 ### Fixed
 
