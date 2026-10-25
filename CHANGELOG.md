@@ -7,6 +7,10 @@
 - Product website with an interactive routing preview, automatic light and dark appearance, installation instructions, and GitHub Pages deployment.
 - Universal macOS download and SHA-256 checksum on GitHub Releases.
 
+### Changed
+
+- Refine website download navigation and installation copy.
+
 ### Fixed
 
 - Correct browser picker placement when first opening and reopening the window.
