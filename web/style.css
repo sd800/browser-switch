@@ -185,11 +185,11 @@ details[open] > summary svg { transform: rotate(45deg); }
 .installation li::before { content: counter(installation); position: absolute; left: 0; top: 1px; display: grid; place-items: center; width: 21px; height: 21px; border: 1px solid var(--line); border-radius: 50%; font-size: 10px; color: var(--muted); }
 .installation li strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
 .installation li > span { color: var(--muted); }
-.site-footer { display: flex; justify-content: space-between; gap: 28px; align-items: center; padding-block: 54px 40px; }
-.site-footer .wordmark { font-size: 14px; }
-.site-footer p { color: var(--muted); font-size: 10px; margin-top: 8px; }
-.footer-right { display: flex; align-items: center; gap: 18px; }
-.site-footer .copyright { font-size: 11px; margin: 0; white-space: nowrap; }
+.site-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 28px; align-items: center; padding-block: 54px 40px; }
+.site-footer .wordmark { grid-area: 1 / 1; justify-self: start; font-size: 14px; }
+.site-footer .theme-toggle { grid-area: 1 / 2; justify-self: end; }
+.site-footer p { grid-area: 2 / 1; color: var(--muted); font-size: 10px; margin: 0; }
+.site-footer .copyright { grid-column: 2; text-align: right; white-space: nowrap; }
 .theme-toggle { display: grid; place-items: center; width: 30px; height: 30px; background: transparent; border: 1px solid var(--line); border-radius: 50%; }
 .theme-toggle:hover { background: var(--surface); }
 .theme-toggle .icon { width: 15px; height: 15px; }
@@ -294,8 +294,7 @@ details[open] > summary svg { transform: rotate(45deg); }
   .download-heading h2 { font-size: 34px; }
   .download-meta { font-size: 9px; }
   .installation > h3 { font-size: 19px; }
-  .site-footer { flex-direction: column; align-items: stretch; gap: 22px; padding-block: 38px 28px; }
-  .footer-right { justify-content: space-between; width: 100%; }
+  .site-footer { column-gap: 12px; padding-block: 38px 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
