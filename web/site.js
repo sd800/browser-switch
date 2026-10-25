@@ -20,8 +20,8 @@
     document.getElementById("browser-choices").hidden = !asks;
     document.getElementById("automatic-route").hidden = asks;
     document.getElementById("picker-title").textContent = asks ? "Open link with…" : "On its way.";
-    document.getElementById("picker-domain").textContent = asks ? "github.com" : "wikipedia.org";
-    document.getElementById("preview-url").textContent = asks ? "https://github.com/sd800/browser-switch" : "https://wikipedia.org/";
+    document.getElementById("picker-domain").textContent = asks ? "example.com" : "wikipedia.org";
+    document.getElementById("preview-url").textContent = asks ? "https://example.com/app/login-session?port=..." : "https://wikipedia.org/";
     document.getElementById("picker-hint").textContent = asks ? "Click a browser, or try keys 1–4." : "Your everyday browser takes it from here.";
     rows.forEach(row => row.classList.remove("is-selected"));
     status.textContent = asks ? "Try the preview. No actual links are opened." : "Demo: this link would open in Google Chrome automatically.";
@@ -29,7 +29,7 @@
 
   function choose(row) {
     rows.forEach(other => other.classList.toggle("is-selected", other === row));
-    status.textContent = `Demo: github.com would open in ${row.dataset.browser}.`;
+    status.textContent = `Demo: example.com would open in ${row.dataset.browser}.`;
   }
 
   tabs.forEach((tab, index) => {
