@@ -61,5 +61,5 @@
 - Browser picker with per-link choices, number keys followed by letter keys in keyboard order, and a bounded queue.
 - Independent menu bar and Dock preferences, optional launch at login, and Spotlight reopening.
 - English interface with native system controls, the system accent color, and automatic light and dark appearance.
-- App Sandbox, Hardened Runtime, URL validation, and local-only preferences without browsing history or analytics.
+- App Sandbox, Hardened Runtime, URL validation, and local-only preferences without routing history or analytics.
 - Universal build script, Xcode project, and routing and security tests.

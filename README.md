@@ -12,7 +12,7 @@ Browser Switch is a small native macOS utility that acts as your default web bro
 - **Make a fresh choice.** Browser selections apply to the current link. Domain choices are never remembered automatically.
 - **Stay out of the way.** Independently enable the menu bar icon and persistent Dock icon. With both off, reopen the app from Spotlight, Launchpad, or Applications.
 - **Feel at home on macOS.** Native controls, the system accent color, system fonts, automatic light and dark appearance, and standard keyboard shortcuts. The interface is in English (United States).
-- **Keep links private.** No analytics, browsing history, embedded browser, or outbound network permission. Settings stay on the Mac.
+- **Keep links private.** No analytics, routing history, embedded browser, or outbound network permission. Settings stay on the Mac.
 
 ## Requirements
 
