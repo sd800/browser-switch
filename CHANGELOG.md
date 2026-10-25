@@ -9,7 +9,7 @@
 
 ### Changed
 
-- Simplify website download navigation and first-launch installation instructions.
+- Simplify website download navigation, first-launch installation instructions, and the footer.
 
 ### Fixed
 
