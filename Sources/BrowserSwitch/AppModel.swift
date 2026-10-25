@@ -18,24 +18,40 @@ enum AppStyle {
 
 @MainActor
 final class AppModel: ObservableObject {
+    typealias WorkspaceOpener = ([URL], URL, NSWorkspace.OpenConfiguration, @escaping (Error?) -> Void) -> Void
     static let bundleID = "org.songming.BrowserSwitch"
-    @Published var settings: AppSettings { didSet { save(); onSettingsChange?() } }
+    @Published var settings: AppSettings {
+        didSet {
+            guard settings.isValid else { settingsRequireReview = true; return }
+            settingsRequireReview = false
+            save()
+            onSettingsChange?()
+        }
+    }
     @Published private(set) var browsers: [InstalledBrowser] = []
     @Published private(set) var isSystemDefault = false
     @Published var errorMessage: String?
     @Published var isSettingDefault = false
+    @Published private(set) var settingsRequireReview = false
     var onSettingsChange: (() -> Void)?
     private let defaults: UserDefaults
+    private let workspaceOpen: WorkspaceOpener
     private static let settingsKey = "BrowserSwitch.settings.v1"
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, workspaceOpen: WorkspaceOpener? = nil) {
         self.defaults = defaults
-        if let data = defaults.data(forKey: Self.settingsKey), let saved = try? JSONDecoder().decode(AppSettings.self, from: data) {
+        self.workspaceOpen = workspaceOpen ?? { urls, applicationURL, configuration, completion in
+            NSWorkspace.shared.open(urls, withApplicationAt: applicationURL, configuration: configuration) { _, error in
+                Task { @MainActor in completion(error) }
+            }
+        }
+        if let data = defaults.data(forKey: Self.settingsKey), let saved = AppSettings.decode(data) {
             settings = saved
         } else {
             settings = AppSettings()
-            if defaults.data(forKey: Self.settingsKey) != nil {
-                errorMessage = "Saved settings could not be read. Default settings are in use."
+            if defaults.object(forKey: Self.settingsKey) != nil {
+                settingsRequireReview = true
+                errorMessage = "Saved settings could not be read. Automatic routing is paused until you update your settings."
             }
         }
         refreshBrowsers()
@@ -67,6 +83,7 @@ final class AppModel: ObservableObject {
         browsers = htmlIDs.compactMap { id in
             guard id != Self.bundleID, seen.insert(id).inserted,
                   let url = workspace.urlForApplication(withBundleIdentifier: id),
+                  url.resolvingSymlinksInPath().standardizedFileURL != Bundle.main.bundleURL.resolvingSymlinksInPath().standardizedFileURL,
                   http.contains(url.standardizedFileURL), https.contains(url.standardizedFileURL) else { return nil }
             let bundle = Bundle(url: url)
             let name = (bundle?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
@@ -129,6 +146,7 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func addDomain(_ input: String, includesSubdomains: Bool = true) -> String? {
+        guard settings.rules.count < AppSettings.maximumRules else { return "The domain list is full. Remove a domain before adding another." }
         guard let domain = DomainName.parse(input) else { return "Enter a valid domain, such as example.com, or paste a web address." }
         guard !settings.rules.contains(where: { $0.domain == domain }) else { return "This domain is already in your list." }
         settings.rules.append(DomainRule(domain: domain, includesSubdomains: includesSubdomains))
@@ -136,25 +154,32 @@ final class AppModel: ObservableObject {
     }
 
     func open(_ url: URL, in browser: InstalledBrowser, completion: @escaping (Bool) -> Void) {
-        guard Routing.accepts(url), browser.id != Self.bundleID,
-              browser.url.standardizedFileURL != Bundle.main.bundleURL.standardizedFileURL else {
+        let applicationURL = browser.url.resolvingSymlinksInPath().standardizedFileURL
+        guard Routing.accepts(url), browser.id != Self.bundleID, browser.url.isFileURL,
+              applicationURL != Bundle.main.bundleURL.resolvingSymlinksInPath().standardizedFileURL,
+              let registeredURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: browser.id),
+              registeredURL.resolvingSymlinksInPath().standardizedFileURL == applicationURL else {
             completion(false)
             return
         }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        NSWorkspace.shared.open([url], withApplicationAt: browser.url, configuration: configuration) { [weak self] _, error in
-            Task { @MainActor in
-                if let error {
-                    self?.errorMessage = "Could not open \(browser.name). \(error.localizedDescription)"
-                    self?.refreshBrowsers()
-                    completion(false)
-                } else { completion(true) }
-            }
+        configuration.addsToRecentItems = false
+        configuration.allowsRunningApplicationSubstitution = false
+        configuration.promptsUserIfNeeded = false
+        workspaceOpen([url], browser.url, configuration) { [weak self] error in
+            if error != nil {
+                // System error descriptions can contain the destination URL.
+                self?.errorMessage = "Could not open \(browser.name). Try again or choose another browser."
+                self?.refreshBrowsers()
+                completion(false)
+            } else { completion(true) }
         }
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(settings) { defaults.set(data, forKey: Self.settingsKey) }
+        if let data = try? JSONEncoder().encode(settings), data.count <= AppSettings.maximumDataBytes {
+            defaults.set(data, forKey: Self.settingsKey)
+        }
     }
 }

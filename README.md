@@ -38,7 +38,7 @@ cd browser-switch
 ./Scripts/build.sh
 ```
 
-The build produces `dist/Browser Switch.app` and a versioned ZIP archive. Copy the app to `/Applications` or `~/Applications`, then open it. Keep one installed copy so macOS does not register multiple builds of the same app.
+The build produces `dist/Browser Switch.app`, a versioned ZIP archive, and `dist/SHA256SUMS.txt`. It verifies the app signature again after extracting the archive. Copy the app to `/Applications` or `~/Applications`, then open it. Keep one installed copy so macOS does not register multiple builds of the same app.
 
 The script signs local builds with an ad hoc signature, App Sandbox, and Hardened Runtime. These builds are intended for local use and are not notarized. A Developer ID distribution requires an appropriate signing identity and Apple notarization; setting `SIGNING_IDENTITY` signs the build with that identity but does not notarize it.
 
@@ -88,7 +88,7 @@ See [SECURITY.md](SECURITY.md) for the security model and reporting guidance.
 ./Scripts/test.sh
 ```
 
-The test suite covers domain normalization, internationalized hostnames, matching boundaries, protocol and size restrictions, browser fallback, browser ordering, persistence, and browser picker placement. Window placement checks require a graphical macOS session.
+The test suite covers domain normalization, internationalized hostnames, matching boundaries, ambiguous URL authorities, protocol and size restrictions, request floods, browser fallback, browser ordering, preference validation, data minimization, and browser picker placement. Window placement checks require a graphical macOS session.
 
 After building, inspect browser discovery without opening a website:
 

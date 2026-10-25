@@ -9,19 +9,25 @@ The release build enables **App Sandbox** and **Hardened Runtime**. Its entitlem
 ### Input handling
 
 - Only HTTP, HTTPS, and associated local HTML documents are accepted. Script, data, custom application schemes, and remote file URLs are rejected.
-- URLs are limited to 64 KiB; each incoming batch and the pending picker queue are limited to 64 links. Overflow links are discarded.
+- URLs are limited to 64 KiB. Each incoming batch is limited to 64 links, and the combined number of queued links and active browser handoffs cannot exceed 64. Overflow links are discarded.
 - Routing examines the parsed hostname, never a substring of a full URL. Subdomain matches require a dot boundary, preventing matches such as `notexample.com` and `example.com.evil.org`.
 - Domain inputs are normalized to lowercase ASCII hostnames, including internationalized domains. Embedded credentials, wildcards, malformed labels, and unsupported schemes are rejected in domain rules.
+- Domain validation does not use an ICANN suffix list, a domain allowlist, or DNS lookups. Private suffixes, internal hostnames, and internationalized domains, including emoji, are supported through system URL parsing. Underscores in internal hostname labels are also accepted.
+- Encoded hostname delimiters, legacy numeric IPv4 forms, malformed or overflowing ports, and scoped IPv6 literals are rejected. Local HTML URLs cannot contain authority credentials, ports, or null bytes in their paths.
 - Browser Switch excludes its own bundle identifier and application path from dispatch to prevent direct routing loops.
+- Each handoff rechecks the selected application's registered path and disables substitution with a running copy at a different path.
 - URLs are passed directly to system application-opening APIs. No shell commands, AppleScript, dynamic code, URL rewriting, or command interpolation is involved.
 
 ### Data handling
 
 - Domain rules and browser preferences are stored in the app's local macOS preferences container.
+- Saved preferences are validated before use and limited to 1 MiB, 1,024 domain rules, and 256 browser preferences. If saved preferences are invalid, incoming links require browser selection until the user updates the settings.
 - Incoming URLs are kept only in memory while waiting in the routing queue or being handed off to a browser. A queued URL is removed after a handoff, when the user cancels that link, or when the picker closes.
 - Per-link browser selections are used only for the current handoff and are not saved. Incoming URLs and per-link selections are not written to history or diagnostic logs.
 - The app contains no analytics, update service, remote configuration, web view, or third-party dependencies.
 - The optional diagnostics command reports installed browser metadata and default-browser status. It does not print domain rules or incoming URLs.
+- Browser-opening errors use generic messages rather than system error descriptions that may contain destination URLs or credentials.
+- Handoffs request that macOS not add the application or documents to Recent Items. Browser Switch does not request system error or authentication dialogs during handoff; Gatekeeper can still display its own checks. The receiving browser manages its own history and privacy settings.
 
 ### Trust boundaries
 

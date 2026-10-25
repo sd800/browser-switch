@@ -120,4 +120,91 @@ final class RoutingTests: XCTestCase {
         }
         XCTAssertFalse(Routing.accepts(URL(string: "https://example.com/" + String(repeating: "a", count: 65_536))!))
     }
+
+    func testAmbiguousAuthoritiesAndOverflowingPortsAreRejected() throws {
+        let inputs = [
+            "https://%65xample.com/path", "https://example%2ecom/path",
+            "https://example.com%2f.evil.invalid/path", "https://exa%00mple.com",
+            "https://example.com\\@evil.invalid/path", "https://example.com..",
+            "https://example.com:", "https://example.com:999999999999999999999999999999999999",
+            "http://127.1/", "http://2130706433/", "http://0x7f000001/", "http://0177.0.0.1/",
+            "https://[fe80::1%25en0]/", "file://user:pass@localhost/page.html",
+            "file://localhost:42/tmp/page.html", "file:///tmp/a%00.html"
+        ]
+        for input in inputs {
+            let url = try XCTUnwrap(URL(string: input), input)
+            XCTAssertFalse(Routing.accepts(url), input)
+            XCTAssertFalse(Routing.shouldAsk(for: url, rules: [DomainRule(domain: "example.com")]), input)
+        }
+        XCTAssertNil(DomainName.parse("https://example.com:999999999999999999999999999999999999"))
+        XCTAssertNil(DomainName.parse(String(repeating: "a", count: Routing.maximumURLBytes + 1)))
+    }
+
+    func testValidatedRoutingPreservesOriginalDestination() throws {
+        for input in ["https://user:secret@example.com:443/a?token=TEST_ONLY#part", "https://bücher.de/path",
+                      "http://localhost:8080/a", "http://localhost:0008080/a", "http://127.0.0.1:3000/callback", "https://[0:0:0:0:0:0:0:1]:443/path"] {
+            let url = try XCTUnwrap(URL(string: input))
+            let original = url.absoluteString
+            XCTAssertTrue(Routing.accepts(url), input)
+            let host = try XCTUnwrap(Routing.webHost(url))
+            XCTAssertTrue(Routing.shouldAsk(for: url, rules: [DomainRule(domain: host)]), input)
+            XCTAssertEqual(url.absoluteString, original)
+        }
+        XCTAssertTrue(DomainRule(domain: "::1").matches(host: "0:0:0:0:0:0:0:1"))
+        XCTAssertFalse(DomainRule(domain: "127.0.0.1").matches(host: "x.127.0.0.1"))
+        XCTAssertFalse(DomainRule(domain: "").matches(host: "example.com"))
+        XCTAssertTrue(Routing.accepts(try XCTUnwrap(URL(string: "file:///tmp/a%2500.html"))))
+    }
+
+    func testPrivateAndEmojiDomainsDoNotRequirePublicSuffixes() throws {
+        let cases = [
+            ("hello.mycompany", "hello.mycompany"),
+            ("😀.mycompany", "xn--e28h.mycompany"),
+            ("hello.🌍", "hello.xn--tg8h"),
+            ("例子.公司", "xn--fsqu00a.xn--55qx5d"),
+            ("my_service.mycompany", "my_service.mycompany"),
+            ("intranet", "intranet"),
+            ("app.tenant-123", "app.tenant-123")
+        ]
+        for (input, expected) in cases {
+            let url = try XCTUnwrap(URL(string: "https://\(input)/callback?token=TEST_ONLY"))
+            let original = url.absoluteString
+            XCTAssertEqual(DomainName.parse(input), expected)
+            XCTAssertTrue(Routing.accepts(url), input)
+            XCTAssertTrue(Routing.shouldAsk(for: url, rules: [DomainRule(domain: expected)]), input)
+            XCTAssertFalse(DomainRule(domain: expected).matches(host: expected + ".other"))
+            XCTAssertEqual(url.absoluteString, original)
+        }
+    }
+
+    func testMalformedSettingsAreRejectedBeforeUse() throws {
+        var settings = AppSettings()
+        settings.rules = [DomainRule(domain: "example.com", includesSubdomains: false)]
+        XCTAssertEqual(AppSettings.decode(try JSONEncoder().encode(settings)), settings)
+        var legacyIPv6 = settings
+        legacyIPv6.rules = [DomainRule(domain: "0:0:0:0:0:0:0:1", includesSubdomains: false)]
+        let migrated = try XCTUnwrap(AppSettings.decode(try JSONEncoder().encode(legacyIPv6)))
+        XCTAssertEqual(migrated.rules.first?.domain, "::1")
+        XCTAssertEqual(migrated.rules.first?.id, legacyIPv6.rules.first?.id)
+        XCTAssertEqual(migrated.rules.first?.includesSubdomains, false)
+        var invalid = settings
+        invalid.schemaVersion = 99
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        invalid = settings
+        invalid.rules.append(invalid.rules[0])
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        invalid = settings
+        invalid.rules = [DomainRule(domain: "https://example.com/private?token=TEST_ONLY")]
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        invalid = settings
+        invalid.browsers = [BrowserPreference(bundleID: "com.apple.Safari"), BrowserPreference(bundleID: "com.apple.Safari")]
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        invalid = settings
+        invalid.defaultBrowserID = "file:///tmp/application.app"
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        invalid = settings
+        invalid.rules = (0...AppSettings.maximumRules).map { DomainRule(domain: "d\($0).example.com") }
+        XCTAssertNil(AppSettings.decode(try JSONEncoder().encode(invalid)))
+        XCTAssertNil(AppSettings.decode(Data(repeating: 32, count: AppSettings.maximumDataBytes + 1)))
+    }
 }

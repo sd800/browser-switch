@@ -1,5 +1,22 @@
 # Changelog
 
+## 26.1025.6 — 2026-10-25
+
+### Security
+
+- Reject ambiguous URL hosts, malformed ports, legacy numeric IPv4 forms, and unsafe local HTML authorities.
+- Bound queued links and active handoffs together across incoming events.
+- Validate saved preferences and require browser selection when settings are invalid.
+- Recheck registered browser paths before opening links and keep destination URLs out of error messages.
+- Disable Recent Items registration and automatic substitution with a different browser installation during handoff.
+- Verify extracted release archives, generate checksums during builds, and restrict website deployment permissions.
+- Tighten the website content security policy and add protection to the error page.
+
+### Added
+
+- Security regression tests and a macOS test workflow.
+- Regression coverage for private suffixes, internal hostnames, and emoji domains, with support for underscores in internal names.
+
 ## 26.1024.5 — 2026-10-24
 
 ### Added

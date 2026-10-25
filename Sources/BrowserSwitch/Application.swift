@@ -21,8 +21,12 @@ struct BrowserSwitchApplication {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-    private let model = AppModel()
+    typealias LinkOpener = (URL, InstalledBrowser, @escaping (Bool) -> Void) -> Void
+    private let model: AppModel
+    private let openLink: LinkOpener
     private let chooser = ChooserState()
+    private(set) var inFlightLinkCount = 0
+    var pendingLinkCount: Int { chooser.urls.count }
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
     private var chooserWindow: BrowserPickerWindow?
@@ -30,6 +34,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var receivedURLs = false
     private var finishedLaunching = false
     private var launchedAtLogin = false
+
+    init(model: AppModel? = nil, openLink: LinkOpener? = nil) {
+        let model = model ?? AppModel()
+        self.model = model
+        self.openLink = openLink ?? model.open
+        super.init()
+    }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         launchedAtLogin = NSAppleEventManager.shared().currentAppleEvent?
@@ -54,17 +65,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         receivedURLs = true
+        guard chooser.urls.count + inFlightLinkCount < Routing.maximumPendingLinks else { return }
         model.refreshBrowsers()
         for url in urls.prefix(Routing.maximumPendingLinks) {
+            guard chooser.urls.count + inFlightLinkCount < Routing.maximumPendingLinks else { break }
             guard Routing.accepts(url) else { continue }
-            if Routing.shouldAsk(for: url, rules: model.settings.rules) || model.defaultBrowser == nil {
-                enqueue(url)
+            if model.settingsRequireReview || Routing.shouldAsk(for: url, rules: model.settings.rules) || model.defaultBrowser == nil {
+                enqueue(url, present: false)
             } else if let browser = model.defaultBrowser {
-                model.open(url, in: browser) { [weak self] success in
-                    if !success { self?.enqueue(url) }
+                inFlightLinkCount += 1
+                openLink(url, browser) { [weak self] success in
+                    guard let self else { return }
+                    self.inFlightLinkCount -= 1
+                    if !success { self.enqueue(url) }
                 }
             }
         }
+        if finishedLaunching, !chooser.urls.isEmpty { showChooser() }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -92,10 +109,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc private func refreshBrowsers() { model.refreshBrowsers() }
 
-    private func enqueue(_ url: URL) {
-        guard chooser.urls.count < Routing.maximumPendingLinks else { return }
+    private func enqueue(_ url: URL, present: Bool = true) {
+        guard chooser.urls.count + inFlightLinkCount < Routing.maximumPendingLinks else { return }
         chooser.urls.append(url)
-        if finishedLaunching { showChooser() }
+        if present, finishedLaunching { showChooser() }
     }
 
     private func showChooser() {
@@ -119,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard !chooser.isOpening, let url = chooser.urls.first else { return }
         chooser.isOpening = true
         chooser.failure = nil
-        model.open(url, in: browser) { [weak self] success in
+        openLink(url, browser) { [weak self] success in
             guard let self else { return }
             self.chooser.isOpening = false
             if success {
@@ -167,8 +184,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
             .applicationName: "Browser Switch",
-            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1024.5",
-            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "5"
+            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1025.6",
+            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "6"
         ])
         aboutWindow = NSApp.keyWindow
         if aboutWindow !== settingsWindow, aboutWindow !== chooserWindow {
