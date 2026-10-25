@@ -2,6 +2,10 @@
 
 ## 26.1025.6 — 2026-10-25
 
+### Fixed
+
+- Redirect website requests for `/index.html` and `/index` to the homepage, preserving query parameters and page anchors.
+
 ### Security
 
 - Reject ambiguous URL hosts, malformed ports, legacy numeric IPv4 forms, and unsafe local HTML authorities.
