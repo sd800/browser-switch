@@ -18,8 +18,7 @@ The release build enables **App Sandbox** and **Hardened Runtime**. Its entitlem
 ### Data handling
 
 - Domain rules and browser preferences are stored in the app's local macOS preferences container.
-- The app does not persist incoming URLs. A queued URL is removed from its active routing state when handoff succeeds, the user cancels that URL, or the picker closes. All routing state ends when the app process exits. A failed handoff does not remove the URL; it remains queued until one of these events. There is no automatic expiration or fixed maximum retention time for queued URLs.
-- Removal from routing state is not secure memory erasure. The app does not overwrite URL buffers or guarantee when their bytes are reclaimed or overwritten by the runtime or operating system.
+- Incoming URLs are kept only in memory while waiting in the routing queue or being handed off to a browser. A queued URL is removed after a handoff, when the user cancels that link, or when the picker closes.
 - Per-link browser selections are used only for the current handoff and are not saved. Incoming URLs and per-link selections are not written to history or diagnostic logs.
 - The app contains no analytics, update service, remote configuration, web view, or third-party dependencies.
 - The optional diagnostics command reports installed browser metadata and default-browser status. It does not print domain rules or incoming URLs.

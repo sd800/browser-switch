@@ -157,7 +157,6 @@ kbd { display: inline-grid; place-items: center; border: 1px solid var(--line); 
 .native-shortcut > span { color: var(--muted); font-size: 11px; margin-left: 7px; }
 .privacy-symbol { display: inline-grid; place-items: center; width: 48px; height: 48px; color: var(--accent); background: var(--soft-blue); border-radius: 13px; margin-bottom: 25px; }
 .privacy-symbol .icon { width: 27px; height: 27px; }
-.privacy-section .text-link { margin-top: 25px; color: var(--accent); }
 .privacy-details { margin: 14px 0 0; }
 .privacy-details > div { padding-block: 25px; border-bottom: 1px solid var(--line); }
 .privacy-details > div:first-child { padding-top: 0; }
