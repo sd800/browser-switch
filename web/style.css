@@ -178,7 +178,6 @@ details[open] > summary svg { transform: rotate(45deg); }
 .download-heading h2 { font-size: clamp(32px, 3.2vw, 43px); }
 .download-heading .button { margin-top: 28px; }
 .download-meta { margin-top: 15px; font-size: 10px; color: var(--muted); }
-.release-link { margin-top: 15px; color: var(--muted); font-size: 11px; }
 .installation { padding-top: 12px; }
 .installation > h3 { font-size: 21px; margin-bottom: 23px; }
 .installation ol { list-style: none; margin: 0; padding: 0; counter-reset: installation; }
