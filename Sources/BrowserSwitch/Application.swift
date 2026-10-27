@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     typealias LinkOpener = (URL, InstalledBrowser, @escaping (Bool) -> Void) -> Void
     private let model: AppModel
     private let openLink: LinkOpener
+    private let launchEvent: () -> NSAppleEventDescriptor?
     private let chooser = ChooserState()
     private(set) var inFlightLinkCount = 0
     var pendingLinkCount: Int { chooser.urls.count }
@@ -35,20 +36,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var finishedLaunching = false
     private var launchedAtLogin = false
 
-    init(model: AppModel? = nil, openLink: LinkOpener? = nil) {
+    init(model: AppModel? = nil, openLink: LinkOpener? = nil,
+         launchEvent: @escaping () -> NSAppleEventDescriptor? = { NSAppleEventManager.shared().currentAppleEvent }) {
         let model = model ?? AppModel()
         self.model = model
         self.openLink = openLink ?? model.open
+        self.launchEvent = launchEvent
         super.init()
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        launchedAtLogin = NSAppleEventManager.shared().currentAppleEvent?
-            .paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
         buildMainMenu()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // AppKit has received the launch event by this stage; it may be absent in willFinishLaunching.
+        let event = launchEvent()
+        launchedAtLogin = event?.eventClass == kCoreEventClass && event?.eventID == kAEOpenApplication &&
+            event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
         finishedLaunching = true
         model.onSettingsChange = { [weak self] in self?.updatePresence() }
         updatePresence()
@@ -184,8 +189,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
             .applicationName: "Browser Switch",
-            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1025.6",
-            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "6"
+            .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.1027.7",
+            .version: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "7"
         ])
         aboutWindow = NSApp.keyWindow
         if aboutWindow !== settingsWindow, aboutWindow !== chooserWindow {

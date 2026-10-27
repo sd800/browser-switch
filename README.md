@@ -74,7 +74,7 @@ Browser discovery uses the same macOS application registry that supplies system 
 
 Browsers without an assigned shortcut remain available by clicking.
 
-Closing settings keeps routing available. Quitting stops the running process; macOS launches it again when a link is sent to Browser Switch as the default browser. **Open at login** is optional.
+Closing settings keeps routing available. Quitting stops the running process; macOS launches it again when a link is sent to Browser Switch as the default browser. **Open at login** is optional and starts the app in the background without opening settings. Open the app manually to show settings.
 
 ## Privacy and security
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 26.1027.7 — 2026-10-27
+
+### Fixed
+
+- Start quietly at login without opening the settings window, while keeping settings available when the app is opened manually.
+
 ## 26.1025.6 — 2026-10-25
 
 ### Fixed
